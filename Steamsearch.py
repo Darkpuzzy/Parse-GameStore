@@ -5,9 +5,9 @@ from fake_useragent import UserAgent
 from lxml import etree
 from urllib.request import urlopen
 
-enter = 'DayZ'
+enter = 'dayz'
 FUA = UserAgent().chrome
-steam = f'https://store.steampowered.com/search/?term=DayZ' # Rising+Storm+2 #hitman+2
+steam = f'https://store.steampowered.com/search/?term=dayz' # Rising+Storm+2 #hitman+2
 HTMLPARCE = etree.HTMLParser()
 
 
@@ -42,6 +42,15 @@ def links(arg: str):
             list_links.append(advacii['href'])
         elif arg.upper() in advacii['href']:
             list_links.append(advacii['href'])
+
+    if not list_links:
+        interim_list = []
+        j1 = tree.xpath(f"//div[@id='search_resultsRows']/a[1]")
+        advac = j1[-1].attrib
+        interim_list.append(advac['href'])
+        game_name = spliter(list=interim_list,game_name=None)
+        enter = game_name
+        return links(arg=enter)
     return list_links
 
 
@@ -49,19 +58,74 @@ def counter(list_add: list):
     j = list_add
     count_cheak = j.count(enter)
     return count_cheak
-    #if count_cheak == 19:
 
-#span[@class='title']
 
-#print(advacii)
-print(links(enter))
+def spliter(list,game_name):
+    list_split = []
+    n = 0
+    game_n = game_name
+    while n < len(list):
+        for i in list:
+            j = i.split('/')
+            list_split.extend(j)
+            n += 1
+
+    if game_n != None:
+        def find_game_id(list_cheaker,game):
+            try:
+                index_game = list_cheaker.index(game)
+                print(index_game)
+                game_id = list_cheaker[index_game - 1]
+                return game_id
+            except ValueError:
+                ind = 0
+                while True:
+                    if game.lower() == list_cheaker[ind].lower():
+                        game_id = list_cheaker[ind-1]
+                        break
+                    else:
+                        ind += 1
+                        continue
+            return game_id
+        return find_game_id(list_cheaker=list_split, game=game_n)
+    else:
+        return list_split[5]
+
+
+def linkers(id,list_game):
+    for j in list_game:
+        if id in j:
+            return j
+
+""" PARSE PRICE """
+html_link = linkers(id=spliter(links(enter),enter),list_game=links(enter))
+
+while True:
+    sleep(1)
+    req = requests.get(html_link, headers={'User-Agent': FUA})
+    code_txt = req.text
+    break
+
+soup = BeautifulSoup(code_txt,'lxml')
+price = soup.find_all('script', type="text/javascript")
+old_price = soup.find_all('div')   # 'div', 'data-price-final'  'meta', itemprop="price"
+print(old_price)
+
 print(f'________________________________________________________________________________________')
-print(counter(links(enter)))
+print(linkers(id=spliter(links(enter),enter),list_game=links(enter)))
+
 #span[@class='title']
 #for el in j:
     #print(el)
     #print(dir(el))
 #GameName = i.findAll('a', class_ = 'search_result_row ds_collapse_flag')
+# <meta itemprop="price" content="1199">
+""" data-price-final="33100">
+<div class="discount_pct">-80%</div>
+<div class="discount_prices">
+<div class="discount_original_price">1659 pуб. """
+
+# <div class="game_purchase_price price" data-price-final="119900"
 
 
 
